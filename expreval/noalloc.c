@@ -92,7 +92,7 @@ static inline bool scanner_is_number(char c)
 
 static inline void scanner_add_token_with_value(int type, int value)
 {
-    printf("token : %s, %d\n", TokenTypeName[type], value);
+    // printf("token : %s, %d\n", TokenTypeName[type], value);
     parser_tokens[parser_tokens_length++] = (Token){type, value};
 }
 
@@ -331,7 +331,16 @@ int eval(char const *str)
 
 int main()
 {
-    int ans = eval("9 + 20 * (-3 + 1)");
-    printf("ans = %d\n", ans);
+    char buf[1024];
+    char d;
+    while(1)
+    {
+        printf("\n> ");
+        scanf("%1024[^\n]", buf);
+        scanf("%c", &d);
+        
+        int ans = eval(buf);
+        printf("%d\n", ans);
+    }
     return 0;
 }
