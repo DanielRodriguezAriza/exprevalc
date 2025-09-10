@@ -341,6 +341,8 @@ static inline int parser_parse(void)
 
 int eval(char const *str)
 {
+    has_failed = false;
+    
     scanner_source = NULL;
     scanner_source_length = 0;
     scanner_current = 0;
