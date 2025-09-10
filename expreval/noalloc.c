@@ -4,10 +4,20 @@
 #include <stdbool.h>
 #include <string.h>
 
+static inline int powi(int a, int b)
+{
+    int ans = 1;
+    for(int i = 0; i < b; ++i)
+    {
+        ans *= a;
+    }
+    return ans;
+}
+
 enum TokenType {
     TOKEN_NONE,
     TOKEN_PAREN_L, TOKEN_PAREN_R,
-    TOKEN_OP_PLUS, TOKEN_OP_MINUS, TOKEN_OP_STAR, TOKEN_OP_SLASH,
+    TOKEN_OP_PLUS, TOKEN_OP_MINUS, TOKEN_OP_STAR, TOKEN_OP_SLASH, TOKEN_OP_POW,
     TOKEN_LIT_NUMBER,
     TOKEN_EOF,
     TOKEN_COUNT,
@@ -16,7 +26,7 @@ enum TokenType {
 static char const *TokenTypeName[] = {
     "TOKEN_NONE",
     "TOKEN_PAREN_L", "TOKEN_PAREN_R",
-    "TOKEN_OP_PLUS", "TOKEN_OP_MINUS", "TOKEN_OP_STAR", "TOKEN_OP_SLASH",
+    "TOKEN_OP_PLUS", "TOKEN_OP_MINUS", "TOKEN_OP_STAR", "TOKEN_OP_SLASH", "TOKE_OP_POW",
     "TOKEN_LIT_NUMBER",
     "TOKEN_EOF",
     "TOKEN_COUNT",
@@ -124,6 +134,7 @@ static inline void scanner_scan_token(void)
         case '/': scanner_add_token(TOKEN_OP_SLASH); break;
         case '(': scanner_add_token(TOKEN_PAREN_L); break;
         case ')': scanner_add_token(TOKEN_PAREN_R); break;
+        case '^': scanner_add_token(TOKEN_OP_POW); break;
         default: {
             if(scanner_is_number(c))
             {
@@ -250,14 +261,32 @@ static inline int parser_parse_expr_unary(void)
     return parser_parse_expr_primary();
 }
 
-static inline int parser_parse_expr_muldiv(void)
+static inline int parser_parse_expr_pow(void)
 {
     int l = 0, r = 0;
     l = parser_parse_expr_unary();
-    while(parser_match(TOKEN_OP_STAR) || parser_match(TOKEN_OP_SLASH))
+    while(parser_match(TOKEN_OP_POW))
     {
         Token op = parser_peek_previous();
         r = parser_parse_expr_unary();
+        if(op.type == TOKEN_OP_POW) {
+            l = powi(l, r);
+        } else {
+            has_failed = true;
+            fprintf(stderr, "Wrong operator found in pow expr.\n");
+        }
+    }
+    return l;
+}
+
+static inline int parser_parse_expr_muldiv(void)
+{
+    int l = 0, r = 0;
+    l = parser_parse_expr_pow();
+    while(parser_match(TOKEN_OP_STAR) || parser_match(TOKEN_OP_SLASH))
+    {
+        Token op = parser_peek_previous();
+        r = parser_parse_expr_pow();
         switch(op.type)
         {
             case TOKEN_OP_STAR: {
